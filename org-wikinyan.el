@@ -87,33 +87,35 @@ If RELATIVELY return filepath relative of current org page."
 
 (defun org-wikinyan--page->sublink (pagename)
   "Get sublink of link PAGENAME."
-  (or (s-match "<|.*|>" pagename)
+  (or (substring (car (s-match "<|.*|>" pagename)) 2 -2)
       ""))
 
 ;; Links
-;; (defun org-wikinyan--follow-sublink (sublink)
-;;   "Follow SUBLINK in current org file."
-;;   (let ((--patterns org-wikinyan-sublink-patterns))
-;;     (while (and --patterns
-;;                 (eq (point)
-;;                     (point-min)))
-;;       (goto-char (point-min))
-;;       (re-search-forward (format (car --patterns) sublink) nil :noerror)
-;;       (setq --patterns (cdr --patterns)))))
+(defun org-wikinyan--follow-sublink (sublink)
+  "Follow SUBLINK in current org file."
+  (let ((--patterns org-wikinyan-sublink-patterns))
+    (while (and --patterns
+                (eq (point)
+                    (point-min)))
+      (goto-char (point-min))
+      (re-search-forward (format (car --patterns) sublink) nil :noerror)
+      (setq --patterns (cdr --patterns)))))
 
 ;; Wiki absolute links relatively of `org-wikinyan-location'
 (defun org-wikinyan--follow-absolute (pagename)
   "Follow absolute link."
   (let ((org-wiki-filepath (org-wikinyan--page->org pagename))
         (org-wiki-sublink  (org-wikinyan--page->sublink pagename)))
+    (message "follow: \"%s\"" org-wiki-sublink)
+
     (find-file org-wiki-filepath)
     (if (not (f-exists-p org-wiki-filepath))
         (progn
           (org-wikinyan--insert-header)
           (save-buffer))
-      ;; (when (> (length org-wiki-sublink)
-      ;;          0)
-      ;;   (org-wikinyan--follow-sublink org-wiki-sublink))
+      (when (> (length org-wiki-sublink)
+               0)
+        (org-wikinyan--follow-sublink org-wiki-sublink))
       )))
 
 (defun org-wikinyan--export-absolute (path desc backend)
@@ -131,14 +133,15 @@ If RELATIVELY return filepath relative of current org page."
   (let ((org-wiki-filepath (org-wikinyan--page->org pagename
                                                     :relatively))
         (org-wiki-sublink  (org-wikinyan--page->sublink pagename)))
+    (message "follow: \"%s\"" org-wiki-sublink)
     (find-file org-wiki-filepath)
     (if (not (f-exists-p org-wiki-filepath))
         (progn
           (org-wikinyan--insert-header)
           (save-buffer))
-      ;; (when (> (length org-wiki-sublink)
-      ;;          0)
-      ;;   (org-wikinyan--follow-sublink org-wiki-sublink))
+      (when (> (length org-wiki-sublink)
+               0)
+        (org-wikinyan--follow-sublink org-wiki-sublink))
       )))
 
 (defun org-wikinyan--export-relative (path desc backend)
@@ -146,7 +149,7 @@ If RELATIVELY return filepath relative of current org page."
   (cl-case backend
     (html
      (format "<a href='%s'>%s</a>"
-             (org-wikinyan--page->html path)
+             (org-wikinyan--page->html path :relatively)
              (or desc path)))))
 
 ;; Wiki relative links relatively of current location
