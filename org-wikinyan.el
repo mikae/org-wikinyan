@@ -87,7 +87,9 @@ If RELATIVELY return filepath relative of current org page."
 
 (defun org-wikinyan--page->sublink (pagename)
   "Get sublink of link PAGENAME."
-  (or (substring (car (s-match "<|.*|>" pagename)) 2 -2)
+  (or (substring (or (car (s-match "<|.*|>" pagename))
+                     "<||>")
+                 2 -2)
       ""))
 
 ;; Links
@@ -133,7 +135,6 @@ If RELATIVELY return filepath relative of current org page."
   (let ((org-wiki-filepath (org-wikinyan--page->org pagename
                                                     :relatively))
         (org-wiki-sublink  (org-wikinyan--page->sublink pagename)))
-    (message "follow: \"%s\"" org-wiki-sublink)
     (find-file org-wiki-filepath)
     (if (not (f-exists-p org-wiki-filepath))
         (progn
